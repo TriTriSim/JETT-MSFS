@@ -1,0 +1,8 @@
+{
+  "name": "jett-msfs-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
