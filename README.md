@@ -1,2 +1,3 @@
 # JETT-MSFS
-An Intuitive Tauri Toolkit for Flight Sim Developers
+
+JETT-MSFS (JavaScript Environment for Tauri Tools) is a unified development studio and high-level API wrapper for Microsoft Flight Simulator. Built on a lightweight Tauri and Rust backend, JETT abstracts the complexities of SimConnect into an intuitive, human-readable JavaScript/TypeScript API. It includes a built-in GUI for writing, testing, and compiling your flight sim utilities without dealing with C++ memory management or heavy Electron dependencies.
