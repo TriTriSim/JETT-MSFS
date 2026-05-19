@@ -2,5 +2,9 @@
   "name": "@jett/api",
   "version": "1.0.0",
   "main": "src/index.ts",
-  "private": false
+  "types": "src/index.ts",
+  "private": false,
+  "dependencies": {
+    "@tauri-apps/api": "^2"
+  }
 }
