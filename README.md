@@ -13,8 +13,9 @@ JETT-MSFS (JavaScript Environment for Tauri Tools) includes a React + TypeScript
 
 ### Install dependencies
 
+From the repository root:
+
 ```bash
-cd /home/runner/work/JETT-MSFS/JETT-MSFS
 npm install
 ```
 
