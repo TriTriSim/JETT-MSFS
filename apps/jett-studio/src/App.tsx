@@ -33,11 +33,46 @@ const STARTER = `// JETT Studio — live editor
 })();
 `;
 
+// ── Build Monaco type declarations from the live vars/units/events objects ───
+function buildJettDts(
+  v: Record<string, string>,
+  u: Record<string, string>,
+  e: Record<string, string>,
+): string {
+  const props = (obj: Record<string, string>) =>
+    Object.entries(obj)
+      .map(([k, val]) => `  ${k}: '${val.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}';`)
+      .join("\n");
+
+  return `
+declare class Sim {
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  subscribeVariable(name: string, unit: string, fps: number, cb: (value: number) => void): Promise<void>;
+  unsubscribeVariable(name: string): void;
+  getVariable(name: string, unit: string): Promise<number | null>;
+  subscribeEvent(eventName: string, cb: (data: number) => void): Promise<void>;
+  transmitEvent(eventName: string, data?: number): Promise<void>;
+}
+declare const sim: Sim;
+declare const vars: {
+${props(v)}
+};
+declare const units: {
+${props(u)}
+};
+declare const events: {
+${props(e)}
+};
+`;
+}
+
 type LogEntry = { ts: string; text: string; kind: "log" | "error" | "info" };
 
 function App() {
   const [connected, setConnected] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [autoScroll, setAutoScroll] = useState(true);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
 
@@ -47,8 +82,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [logs]);
+    if (autoScroll) logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logs, autoScroll]);
 
   useEffect(() => {
     const sim = new Sim();
@@ -88,10 +123,15 @@ function App() {
   }, [appendLog]);
 
   const runScript = useCallback(() => {
+    appendLog("▶ Running…", "info");
     const src = editorRef.current?.getValue() ?? "";
+    if (!src.trim()) { appendLog("Editor is empty (editorRef not set).", "error"); return; }
     try {
       // eslint-disable-next-line no-new-func
-      new Function(src)();
+      const result = new Function(src)();
+      if (result instanceof Promise) {
+        result.catch((err: unknown) => appendLog(String(err), "error"));
+      }
     } catch (err) {
       appendLog(String(err), "error");
     }
@@ -99,6 +139,20 @@ function App() {
 
   const handleEditorMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+
+    // Register JETT globals for IntelliSense in JS and TS files.
+    // Merge with existing options so built-in completions (console, Promise, DOM…) are preserved.
+    const jettDts = buildJettDts(vars as unknown as Record<string,string>, units as unknown as Record<string,string>, events as unknown as Record<string,string>);
+    const libUri = "ts:jett-globals.d.ts";
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(jettDts, libUri);
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(jettDts, libUri);
+
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      ...monaco.languages.typescript.javascriptDefaults.getCompilerOptions(),
+      allowJs: true,
+      checkJs: true,
+    });
+
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
       runScript,
@@ -189,7 +243,20 @@ function App() {
 
         {/* Console pane */}
         <div className="console-pane">
-          <div className="console-header">CONSOLE</div>
+          <div className="console-header">
+            <span>CONSOLE</span>
+            <button
+              className={`btn console-pin-btn ${autoScroll ? "active" : ""}`}
+              title={autoScroll ? "Auto-scroll on" : "Auto-scroll off"}
+              onClick={() => {
+                const next = !autoScroll;
+                setAutoScroll(next);
+                if (next) logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              {autoScroll ? "⏷" : "⏸"}
+            </button>
+          </div>
           <div className="console-body">
             {logs.map((l, i) => (
               <div key={i} className={`log-line log-${l.kind}`}>
