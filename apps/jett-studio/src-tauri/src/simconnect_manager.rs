@@ -232,6 +232,25 @@ pub fn start_simconnect_thread(app: AppHandle, rx: mpsc::Receiver<SimCommand>) {
                             );
                         }
                     }
+                    ffi::SIMCONNECT_RECV_ID_EXCEPTION => {
+                        let exc = unsafe {
+                            &*(data_ptr as *const ffi::SIMCONNECT_RECV_EXCEPTION)
+                        };
+                        let code = unsafe { std::ptr::read_unaligned(std::ptr::addr_of!(exc.dwException)) };
+                        let msg = match code {
+                            ffi::SIMCONNECT_EXCEPTION_NAME_UNRECOGNIZED => "NAME_UNRECOGNIZED (simvar name unknown)",
+                            ffi::SIMCONNECT_EXCEPTION_INVALID_DATA_TYPE => "INVALID_DATA_TYPE (unit unknown or wrong type)",
+                            ffi::SIMCONNECT_EXCEPTION_DEFINITION_ERROR  => "DEFINITION_ERROR (simvar name or unit invalid)",
+                            ffi::SIMCONNECT_EXCEPTION_UNRECOGNIZED_ID   => "UNRECOGNIZED_ID",
+                            ffi::SIMCONNECT_EXCEPTION_ERROR              => "ERROR",
+                            _                                            => "unknown error",
+                        };
+                        let _ = app.emit("jett-error", format!("SimConnect exception {code}: {msg}"));
+                        // Immediately unblock any pending one-shot getVariable calls
+                        for (_, tx) in pending_replies.drain() {
+                            let _ = tx.send(None);
+                        }
+                    }
                     ffi::SIMCONNECT_RECV_ID_QUIT => break 'main,
                     _ => {}
                 }

@@ -86,6 +86,23 @@ pub struct SIMCONNECT_RECV_SIMOBJECT_DATA {
     pub dwData:        DWORD, // first 4 bytes of variable-length data
 }
 
+#[repr(C, packed)]
+#[derive(Debug, Copy, Clone)]
+pub struct SIMCONNECT_RECV_EXCEPTION {
+    pub _base:       SIMCONNECT_RECV,
+    pub dwException: DWORD,
+    pub dwSendID:    DWORD,
+    pub dwIndex:     DWORD,
+}
+
+// SIMCONNECT_EXCEPTION codes (partial)
+pub const SIMCONNECT_EXCEPTION_NONE:              DWORD = 0;
+pub const SIMCONNECT_EXCEPTION_ERROR:             DWORD = 1;
+pub const SIMCONNECT_EXCEPTION_UNRECOGNIZED_ID:   DWORD = 3;
+pub const SIMCONNECT_EXCEPTION_NAME_UNRECOGNIZED: DWORD = 7;
+pub const SIMCONNECT_EXCEPTION_INVALID_DATA_TYPE: DWORD = 18;
+pub const SIMCONNECT_EXCEPTION_DEFINITION_ERROR:  DWORD = 28;
+
 // ── Extern function declarations ──────────────────────────────────────────
 // SimConnect API uses __stdcall (= "system" on Windows).
 // All symbols are extern "C" in SimConnect.h (no C++ mangling).

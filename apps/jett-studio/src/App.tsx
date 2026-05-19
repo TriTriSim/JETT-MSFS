@@ -18,17 +18,18 @@ const STARTER = `// JETT Studio — live editor
 
 (async function () {
   // One-shot reads
-  const alt = await sim.getVariable(vars.ALTITUDE, units.FEET);
+  // Note: SimConnect classic names use spaces, e.g. "PLANE ALTITUDE" not "PLANE_ALTITUDE"
+  const alt = await sim.getVariable("PLANE ALTITUDE", units.FOOT);
   console.log("Altitude:", alt?.toFixed(0), "ft");
 
-  const spd = await sim.getVariable(vars.AIRSPEED_INDICATED, units.KNOTS);
+  const spd = await sim.getVariable(vars.AIRSPEED_INDICATED, units.KNOT);
   console.log("Airspeed:", spd?.toFixed(1), "kts");
 
   // Subscribe at 1 Hz — unsubscribes after 5 updates
   let n = 0;
-  await sim.subscribeVariable(vars.ALTITUDE, units.FEET, 1, (v) => {
+  await sim.subscribeVariable("PLANE ALTITUDE", units.FOOT, 1, (v) => {
     console.log(\`[alt \${++n}] \${v.toFixed(0)} ft\`);
-    if (n >= 5) sim.unsubscribeVariable(vars.ALTITUDE);
+    if (n >= 5) sim.unsubscribeVariable("PLANE ALTITUDE");
   });
 })();
 `;
@@ -103,6 +104,12 @@ function App() {
       appendLog(args.map(String).join(" "), "error");
     };
 
+    const onUnhandledRejection = (e: PromiseRejectionEvent) => {
+      appendLog(String(e.reason), "error");
+      e.preventDefault();
+    };
+    window.addEventListener("unhandledrejection", onUnhandledRejection);
+
     const unsubs = [
       listen("jett-connected", () => {
         setConnected(true);
@@ -118,6 +125,7 @@ function App() {
     return () => {
       console.log = origLog;
       console.error = origError;
+      window.removeEventListener("unhandledrejection", onUnhandledRejection);
       unsubs.forEach((p) => p.then((fn) => fn()));
     };
   }, [appendLog]);
