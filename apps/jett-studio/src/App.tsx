@@ -195,7 +195,13 @@ function App() {
     <div className="app">
       {/* ── Toolbar ── */}
       <div className="toolbar">
-        <span className="app-title">JETT Studio</span>
+        <div className="brand">
+          <img className="brand-logo" src="tritrisim-logo.png" alt="TriTriSim" />
+          <div className="brand-text">
+            <span className="app-title">JETT Studio</span>
+            <span className="app-subtitle">by TriTriSim</span>
+          </div>
+        </div>
         <div className={`status-dot ${connected ? "connected" : ""}`} />
         <span className="status-label">{connected ? "Connected" : "Disconnected"}</span>
         <div className="toolbar-sep" />
@@ -252,7 +258,7 @@ function App() {
         {/* Console pane */}
         <div className="console-pane">
           <div className="console-header">
-            <span>CONSOLE</span>
+            <span className="console-header-label">Output</span>
             <button
               className={`btn console-pin-btn ${autoScroll ? "active" : ""}`}
               title={autoScroll ? "Auto-scroll on" : "Auto-scroll off"}
