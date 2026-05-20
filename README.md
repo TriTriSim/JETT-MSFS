@@ -1,6 +1,6 @@
 # JETT-MSFS
 
-JETT-MSFS (JavaScript Environment for Tauri Tools) is a monorepo for building tools around **Microsoft Flight Simulator SimConnect** using:
+JETT-MSFS (An Intuitive Tauri Toolkit for Flight Sim Developers) is a monorepo for building tools around **Microsoft Flight Simulator SimConnect** using:
 
 - **Tauri + Rust** for native desktop integration and SimConnect bridge
 - **React + TypeScript** for the Studio UI
